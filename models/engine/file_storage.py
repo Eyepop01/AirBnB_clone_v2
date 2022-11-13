@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""This is the file storage class for AirBnB"""
 import json
 from models.base_model import BaseModel
 from models.user import User
@@ -7,6 +8,7 @@ from models.city import City
 from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
+import shlex
 
 
 class FileStorage:
@@ -24,15 +26,17 @@ class FileStorage:
         Return:
             returns a dictionary of __object
         """
-        d = {}
-
-        if not cls:
+        dic = {}
+        if cls:
+            dictionary = self.__objects
+            for key in dictionary:
+                partition = key.replace('.', ' ')
+                partition = shlex.split(partition)
+                if (partition[0] == cls.__name__):
+                    dic[key] = self.__objects[key]
+            return (dic)
+        else:
             return self.__objects
-
-        d = {key: value for key, value in self.__objects.items()
-             if type(value) == cls}
-
-        return d
 
     def new(self, obj):
         """sets __object to given obj
@@ -53,7 +57,7 @@ class FileStorage:
             json.dump(my_dict, f)
 
     def reload(self):
-        """ deserialize the file path to JSON file path
+        """serialize the file path to JSON file path
         """
         try:
             with open(self.__file_path, 'r', encoding="UTF-8") as f:
@@ -63,17 +67,14 @@ class FileStorage:
         except FileNotFoundError:
             pass
 
-    def close(self):
-        """ specific storage """
-        self.reload()
-
     def delete(self, obj=None):
-        """ Delete obj if its inside """
-        if not obj:
-            return
+        """ delete an existing element
+        """
+        if obj:
+            key = "{}.{}".format(type(obj).__name__, obj.id)
+            del self.__objects[key]
 
-        k = "{}.{}".format(type(obj).__name__, obj.id)
-
-        if k in self.__objects:
-            del self.__objects[k]
-            self.save()
+    def close(self):
+        """ calls reload()
+        """
+        self.reload()
